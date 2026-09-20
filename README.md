@@ -2,6 +2,9 @@
 
 **Machine Identity Security**
 
+> **Your clankers have secrets.**  
+> **SEERE knows where they leaked.**
+
 SEERE is a local-first security agent for discovering and managing machine credentials, non-human identities, and secret exposure across modern software and AI systems.
 
 ## Product flow
