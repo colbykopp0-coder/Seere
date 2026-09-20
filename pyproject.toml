@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "seere-sdk"
+version = "0.1.0"
+description = "Local-first machine identity and secret exposure scanner."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+seere = "seere_sdk.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["seere_sdk*"]
