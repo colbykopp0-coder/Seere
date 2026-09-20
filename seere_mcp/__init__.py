@@ -1,0 +1,1 @@
+"""SEERE MCP integration package."""

@@ -10,9 +10,13 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []
 
+[project.optional-dependencies]
+mcp = ["mcp>=2,<3"]
+
 [project.scripts]
 seere = "seere_sdk.cli:main"
+seere-mcp = "seere_mcp.server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["seere_sdk*"]
+include = ["seere_sdk*", "seere_mcp*"]
