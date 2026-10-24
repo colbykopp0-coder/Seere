@@ -30,7 +30,7 @@ def main():
     if args.command=='init':
         base=Path(args.directory).absolute()
         base.mkdir(parents=True,exist_ok=True)
-        for folder in ['reports/code','reports/local','reports/rag','reports/runtime','plan','scope/code','scope/local','scope/rag','scope/runtime']:
+        for folder in ['reviews/code','reviews/local','reviews/rag','reviews/runtime','reports/code','reports/local','reports/rag','reports/runtime','plan','scope/code','scope/local','scope/rag','scope/runtime']:
             (base/folder).mkdir(parents=True,exist_ok=True)
         load_key(base/'.seere/fingerprint.key')
         manifest={'schema_version':1,'run_id':secrets.token_hex(16),'expected_modules':['code','local','rag','runtime']}

@@ -10,6 +10,7 @@ from seere_sdk.agents import LocalModel
 from seere_sdk.rag import scan_rag, dense_cosine
 from seere_sdk.orchestration import envelope, correlate
 from seere_sdk.security import safe_read
+from seere_sdk.reviews import review_report, validate_review
 
 KEY=b'0'*32
 
@@ -27,10 +28,11 @@ def test_model_adapter_loopback_protocol():
     try:
         model=LocalModel(f'http://127.0.0.1:{server.server_port}/v1/chat/completions','protocol-test-double')
         reports=[envelope(module,'run',KEY,{'complete':True,'findings':[]}) for module in ['code','local','rag','runtime']]
-        result=correlate(reports,run_id='run',model=model)
+        reviews=[review_report(r,r['module'],'run',model) for r in reports]
+        result=correlate(reports,run_id='run',model=model,specialist_reviews=reviews)
         assert result['coordinator']['mode']=='model'
         assert len(requests)==5  # four specialists plus coordinator
-        assert all(set(json.loads(r['messages'][1]['content'])) <= {'module','count','critical_count','high_count','unique_credentials','credential_groups','cross_layer_groups','missing_module_count'} for r in requests)
+        assert all(set(json.loads(r['messages'][1]['content'])) <= {'module','count','critical_count','high_count','unique_credentials','credential_groups','cross_layer_groups','missing_module_count','specialist_high_risk_count'} for r in requests)
     finally:
         server.shutdown();server.server_close();thread.join()
 
@@ -64,3 +66,32 @@ def test_posix_parent_link_swap_denied(tmp_path):
     outside=tmp_path/'outside';outside.mkdir();(outside/'secret').write_text('must never read')
     scope=tmp_path/'scope';scope.mkdir();(scope/'link').symlink_to(outside,target_is_directory=True)
     with pytest.raises(OSError):safe_read(scope,'link/secret',100)
+
+
+def test_specialist_reviews_bound_to_reports():
+    import copy
+    report=envelope('code','run',KEY,{'complete':True,'findings':[]})
+    review=review_report(report,'code','run',None)
+    validate_review(review,report)
+    for field,value in [('run_id','stale'),('module','local'),('key_id','f'*16),('report_digest','0'*64)]:
+        altered=copy.deepcopy(review);altered[field]=value
+        with pytest.raises(ValueError):validate_review(altered,report)
+    changed=copy.deepcopy(report);changed['complete']=False
+    with pytest.raises(ValueError):validate_review(review,changed)
+    with pytest.raises(ValueError):review_report(report,'local','run',None)
+    plan=correlate([report],expected=['code'],run_id='run',specialist_reviews=[])
+    assert not plan['complete'] and plan['missing_specialists']==['code']
+    assert correlate([report],expected=['code'],run_id='run',specialist_reviews=[review])['complete']
+    with pytest.raises(ValueError):correlate([report],expected=['code'],run_id='run',specialist_reviews=[review,review])
+
+
+def test_coordinator_never_calls_specialist_inference():
+    calls=[]
+    class Model:
+        def interpret(self,payload):
+            calls.append(payload['module'])
+            return {'risk':'LOW','reason':'cross_layer_reuse','actions':['verify_all_layers']}
+    reports=[envelope(m,'run',KEY,{'complete':True,'findings':[]}) for m in ['code','local','rag','runtime']]
+    reviews=[review_report(r,r['module'],'run',None) for r in reports]
+    correlate(reports,run_id='run',model=Model(),specialist_reviews=reviews)
+    assert calls==['coordinator']

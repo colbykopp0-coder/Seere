@@ -31,3 +31,4 @@ jobs:
         with:
           python-version: '3.12'
       - run: python tests/container_smoke.py work/container-run
+      - run: python tests/agent_container_smoke.py work/container-run

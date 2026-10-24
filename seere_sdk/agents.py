@@ -28,11 +28,11 @@ def validate_interpretation(value):
 
 
 class LocalModel:
-    """Optional OpenAI-compatible loopback model service. No external endpoint accepted."""
-    def __init__(self, endpoint, model):
+    """OpenAI-compatible model on loopback or an explicitly trusted container host."""
+    def __init__(self, endpoint, model, allowed_hosts=()):
         url = urllib.parse.urlparse(endpoint)
-        if url.scheme != 'http' or url.hostname not in {'127.0.0.1', 'localhost', '::1'} or url.username or url.password:
-            raise ValueError('model_endpoint_must_be_loopback')
+        if url.scheme != 'http' or url.hostname not in {'127.0.0.1', 'localhost', '::1', *allowed_hosts} or url.username or url.password:
+            raise ValueError('model_endpoint_not_trusted')
         self.endpoint, self.model = endpoint, model
 
     def interpret(self, payload):

@@ -34,7 +34,7 @@ for module in ['code','local','rag','runtime']:
 run('docker','compose','--profile','coordinate','run','--rm','coordinator')
 plan=json.loads((base/'plan/plan.json').read_text())
 assert plan['complete'] and len(plan['groups'][0]['layers'])==2
-assert all(s['mode']=='deterministic_fallback' for s in plan['specialists'])
+assert plan['specialists']==[]  # AI review runs in separate specialist containers
 # Inspect the running service config, and attempt a write to the mounted scope.
 config=json.loads(run('docker','compose','--profile','coordinate','config','--format','json').stdout)
 for name in ['code','local','rag','runtime','coordinator']:

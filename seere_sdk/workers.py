@@ -6,7 +6,6 @@ from pathlib import Path
 from .core import ScanConfig, SeereScanner
 from .detection import inspect_text
 from .security import load_key, safe_read
-from .agents import LocalModel
 from .rag import scan_rag, GuardedRAG
 from .orchestration import envelope, correlate, load_reports
 
@@ -21,14 +20,11 @@ def main():
     parser.add_argument('--input', default='/scope')
     parser.add_argument('--output', required=True)
     parser.add_argument('--manifest', required=True)
-    parser.add_argument("--model-endpoint")
-    parser.add_argument("--model")
     args = parser.parse_args()
     manifest_path = Path(args.manifest).absolute()
     manifest = json.loads(safe_read(manifest_path.parent, manifest_path.name, 65536))
     if args.module == 'coordinator':
-        model = LocalModel(args.model_endpoint, args.model) if args.model_endpoint and args.model else None
-        report = correlate(load_reports(args.input, manifest), manifest['expected_modules'], manifest['run_id'], model)
+        report = correlate(load_reports(args.input, manifest), manifest['expected_modules'], manifest['run_id'])
     else:
         key = load_key(os.environ['SEERE_FINGERPRINT_KEY_FILE'])
         if args.module in {'code','local'}:

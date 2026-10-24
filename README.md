@@ -89,3 +89,5 @@ python -m seere_sdk.control benchmark --output work/benchmark.json
 ```
 
 These commands use synthetic credentials. Real provider adapters, loaded-model evaluation and a customer pilot require deployment-specific validation. See [docs/PILOT.md](docs/PILOT.md).
+
+Specialized AI roles now run as four separate containers with a separate coordinator. See [docs/AGENT_ARCHITECTURE.md](docs/AGENT_ARCHITECTURE.md).

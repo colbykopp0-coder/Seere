@@ -1,0 +1,5 @@
+FROM python:3.12-slim
+WORKDIR /fixture
+COPY tests/fixtures/model_server.py ./
+USER 10001:10001
+ENTRYPOINT ["python", "model_server.py"]
