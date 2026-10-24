@@ -1,0 +1,30 @@
+# Optional local inference. Preload model weights offline in SEERE_MODEL_DIR.
+# No ports are published. Both services share a network namespace with no network.
+services:
+  local-model:
+    image: ${SEERE_MODEL_IMAGE:?Set verified Ollama image tag or digest}
+    profiles: [ai]
+    network_mode: none
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      OLLAMA_HOST: 127.0.0.1:11434
+      OLLAMA_MODELS: /models
+    volumes: ["${SEERE_MODEL_DIR:?Set preloaded model directory}:/models:ro"]
+    tmpfs: [/tmp:size=1g, /root/.ollama:size=16m]
+    mem_limit: 8g
+    pids_limit: 256
+  ai-coordinator:
+    build: .
+    profiles: [ai]
+    network_mode: service:local-model
+    depends_on: [local-model]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 512m
+    pids_limit: 64
+    command: [coordinator, --input, /reports, --output, /plan/ai-plan.json, --manifest, /run/manifest.json, --model-endpoint, "http://127.0.0.1:11434/v1/chat/completions", --model, "${SEERE_MODEL:?Set model name}"]
+    volumes: ["${SEERE_RUN_DIR}/reports:/reports:ro", "${SEERE_RUN_DIR}/plan:/plan", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+    tmpfs: [/tmp:size=16m]

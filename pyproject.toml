@@ -15,8 +15,12 @@ mcp = ["mcp>=2,<3"]
 
 [project.scripts]
 seere = "seere_sdk.cli:main"
+seere-control = "seere_sdk.control:main"
 seere-mcp = "seere_mcp.server:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["seere_sdk*", "seere_mcp*"]
+include = ["seere_sdk*", "seere_mcp*", "seere_index*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

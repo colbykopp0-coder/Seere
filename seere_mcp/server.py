@@ -1,4 +1,5 @@
 from __future__ import annotations
+import secrets
 
 import os
 from pathlib import Path
@@ -46,15 +47,14 @@ def _authorize(path: str) -> Path:
 
 
 def _scanner(git_history: bool = False) -> SeereScanner:
-    key = os.environ.get(
-        "SEERE_FINGERPRINT_KEY",
-        "seere-local-dev-key-change-me",
-    ).encode("utf-8")
+    from seere_sdk.security import load_key
+    key = load_key()
 
     return SeereScanner(
         ScanConfig(
             fingerprint_key=key,
             scan_git_history=git_history,
+            allowed_roots=tuple(_allowed_roots()),
         )
     )
 
@@ -75,6 +75,8 @@ def _serialize_findings(report, limit: int = 100) -> list[dict[str, Any]]:
                 "environment": finding.environment,
                 "first_seen": finding.first_seen,
                 "notes": finding.notes,
+                "confidence": finding.confidence,
+                "recommended_action": finding.recommended_action,
             }
         )
     return findings

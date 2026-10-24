@@ -14,7 +14,7 @@ PATTERNS = [
     SecretPattern(
         "OpenAI API key",
         "openai",
-        re.compile(r"\bsk-(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}\b"),
+        re.compile(r"\bsk-(?!ant-)(?:proj-|svcacct-)?[A-Za-z0-9_-]{20,}\b"),
         "HIGH",
     ),
     SecretPattern(
@@ -50,7 +50,7 @@ PATTERNS = [
     SecretPattern(
         "Private key block",
         "generic",
-        re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
+        re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----[\s\S]+?-----END (?:RSA |EC |OPENSSH |ENCRYPTED )?PRIVATE KEY-----"),
         "CRITICAL",
     ),
     SecretPattern(
@@ -58,7 +58,7 @@ PATTERNS = [
         "generic",
         re.compile(
             r"(?i)\b(?:api[_-]?key|access[_-]?token|secret|client[_-]?secret|password)\b"
-            r"\s*[:=]\s*['\"]?([A-Za-z0-9_./+=:@-]{12,})"
+            r"['\"]?\s*[:=]\s*['\"]?([A-Za-z0-9_./+=:@-]{12,})"
         ),
         "MEDIUM",
     ),

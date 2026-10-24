@@ -78,3 +78,14 @@ seere scan ./my-project --push
 Early concept prototype. Not production-ready.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the proposed architecture and roadmap.
+
+## Modular containers and end-to-end demo
+
+The module implementation, container setup, runtime gates, agent coordination and signed remediation workflow are documented in [docs/CONTAINER_FOUNDATION.md](docs/CONTAINER_FOUNDATION.md).
+
+```sh
+python -m seere_sdk.demo work/demo-001
+python -m seere_sdk.control benchmark --output work/benchmark.json
+```
+
+These commands use synthetic credentials. Real provider adapters, loaded-model evaluation and a customer pilot require deployment-specific validation. See [docs/PILOT.md](docs/PILOT.md).

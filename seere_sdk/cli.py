@@ -1,3 +1,4 @@
+import secrets
 import argparse
 import json
 import os
@@ -18,6 +19,8 @@ def render(report):
         f"Medium: {report.stats['medium']}  "
         f"Low: {report.stats['low']}"
     )
+    print(f"Complete: {report.stats['complete']}")
+    print(f"Coverage issues: {len(report.stats['issues'])}")
     print()
 
     for finding in report.findings:
@@ -49,10 +52,8 @@ def main():
 
     args = parser.parse_args()
 
-    fp_key = os.environ.get(
-        "SEERE_FINGERPRINT_KEY",
-        "seere-local-dev-key-change-me",
-    ).encode()
+    from .security import load_key
+    fp_key = load_key()
 
     scanner = SeereScanner(
         ScanConfig(

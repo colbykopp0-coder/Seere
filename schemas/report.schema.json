@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "SEERE module report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "module", "run_id", "key_id", "complete", "findings", "details"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "module": {"enum": ["code", "local", "rag", "runtime"]},
+    "run_id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"},
+    "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$"},
+    "complete": {"type": "boolean"},
+    "details": {"type": "object"},
+    "findings": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "provider", "severity", "path", "line", "preview", "fingerprint", "source", "confidence", "recommended_action"],
+      "properties": {
+        "kind": {"type": "string"}, "provider": {"type": "string"},
+        "severity": {"enum": ["CRITICAL", "HIGH", "MEDIUM", "LOW"]},
+        "path": {"type": "string"}, "line": {"type": ["integer", "null"], "minimum": 1},
+        "preview": {"const": "[REDACTED]"},
+        "fingerprint": {"type": "string", "pattern": "^[a-f0-9]{24}$"},
+        "source": {"type": "string"}, "environment": {"type": ["string", "null"]},
+        "first_seen": {"type": ["string", "null"]}, "notes": {"type": "array", "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "recommended_action": {"type": "string"}
+      }
+    }
+  }
+}

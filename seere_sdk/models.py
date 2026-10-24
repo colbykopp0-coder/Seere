@@ -15,6 +15,8 @@ class Finding:
     environment: Optional[str] = None
     first_seen: Optional[str] = None
     notes: list[str] = field(default_factory=list)
+    confidence: float = 0.8
+    recommended_action: str = "Review ownership and exposure; obtain approval before rotating or removing credentials."
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
