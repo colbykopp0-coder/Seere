@@ -36,7 +36,7 @@ plan=json.loads((base/'plan/plan.json').read_text())
 assert plan['complete'] and len(plan['groups'][0]['layers'])==2
 assert all(s['mode']=='deterministic_fallback' for s in plan['specialists'])
 # Inspect the running service config, and attempt a write to the mounted scope.
-config=json.loads(run('docker','compose','config','--format','json').stdout)
+config=json.loads(run('docker','compose','--profile','coordinate','config','--format','json').stdout)
 for name in ['code','local','rag','runtime','coordinator']:
     service=config['services'][name]
     assert service['network_mode']=='none' and service['read_only']
