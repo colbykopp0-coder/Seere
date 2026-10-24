@@ -1,0 +1,7 @@
+.git
+work
+.seere
+reports
+__pycache__
+*.db
+.env*

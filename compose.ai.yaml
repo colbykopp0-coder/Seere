@@ -1,0 +1,83 @@
+# Each specialist is a separate process/container. Inference is shared infrastructure.
+x-agent: &agent
+  build: .
+  user: "${SEERE_UID:-10001}:${SEERE_GID:-10001}"
+  profiles: [ai]
+  entrypoint: [python, -m, seere_sdk.agent_workers]
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 64
+  mem_limit: 512m
+  cpus: 1
+  networks: [ai-internal]
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+  environment:
+    SEERE_MODEL_ENDPOINT: http://local-model:11434/v1/chat/completions
+    SEERE_MODEL: ${SEERE_MODEL:?Set preloaded model name}
+services:
+  local-model:
+    image: ${SEERE_MODEL_IMAGE:?Set verified Ollama image tag or digest}
+    profiles: [ai]
+    networks: [ai-internal]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_MODELS: /models
+    volumes: ["${SEERE_MODEL_DIR:?Set preloaded model directory}:/models:ro"]
+    tmpfs: [/tmp:size=1g, /root/.ollama:size=16m]
+    mem_limit: 8g
+    pids_limit: 256
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+  code-agent:
+    <<: *agent
+    depends_on:
+      local-model:
+        condition: service_healthy
+    command: [code, --input, /input/report.json, --output, /output/review.json, --manifest, /run/manifest.json, --allow-container-model]
+    volumes: ["${SEERE_RUN_DIR}/reports/code:/input:ro", "${SEERE_RUN_DIR}/reviews/code:/output", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  local-agent:
+    <<: *agent
+    depends_on:
+      local-model:
+        condition: service_healthy
+    command: [local, --input, /input/report.json, --output, /output/review.json, --manifest, /run/manifest.json, --allow-container-model]
+    volumes: ["${SEERE_RUN_DIR}/reports/local:/input:ro", "${SEERE_RUN_DIR}/reviews/local:/output", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  rag-agent:
+    <<: *agent
+    depends_on:
+      local-model:
+        condition: service_healthy
+    command: [rag, --input, /input/report.json, --output, /output/review.json, --manifest, /run/manifest.json, --allow-container-model]
+    volumes: ["${SEERE_RUN_DIR}/reports/rag:/input:ro", "${SEERE_RUN_DIR}/reviews/rag:/output", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  runtime-agent:
+    <<: *agent
+    depends_on:
+      local-model:
+        condition: service_healthy
+    command: [runtime, --input, /input/report.json, --output, /output/review.json, --manifest, /run/manifest.json, --allow-container-model]
+    volumes: ["${SEERE_RUN_DIR}/reports/runtime:/input:ro", "${SEERE_RUN_DIR}/reviews/runtime:/output", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  ai-coordinator:
+    <<: *agent
+    depends_on:
+      local-model:
+        condition: service_healthy
+      code-agent:
+        condition: service_completed_successfully
+      local-agent:
+        condition: service_completed_successfully
+      rag-agent:
+        condition: service_completed_successfully
+      runtime-agent:
+        condition: service_completed_successfully
+    command: [coordinator, --input, /reports, --reviews, /reviews, --output, /plan/ai-plan.json, --manifest, /run/manifest.json, --allow-container-model]
+    volumes: ["${SEERE_RUN_DIR}/reports:/reports:ro", "${SEERE_RUN_DIR}/reviews:/reviews:ro", "${SEERE_RUN_DIR}/plan:/plan", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+networks:
+  ai-internal:
+    internal: true

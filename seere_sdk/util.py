@@ -14,9 +14,7 @@ def fingerprint(secret: str, key: bytes) -> str:
 
 
 def redact(secret: str) -> str:
-    if len(secret) <= 8:
-        return "***"
-    return f"{secret[:4]}…{secret[-4:]}"
+    return "[REDACTED]"
 
 
 def entropy(value: str) -> float:

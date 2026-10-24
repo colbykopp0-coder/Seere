@@ -1,0 +1,41 @@
+x-worker: &worker
+  build: .
+  user: "${SEERE_UID:-10001}:${SEERE_GID:-10001}"
+  network_mode: none
+  read_only: true
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+  pids_limit: 64
+  mem_limit: 512m
+  cpus: 1
+  environment:
+    SEERE_FINGERPRINT_KEY_FILE: /run/secrets/fingerprint_key
+  secrets: [fingerprint_key]
+  tmpfs: ["/tmp:size=16m,mode=1777"]
+services:
+  code:
+    <<: *worker
+    command: [code, --input, /scope, --output, /reports/report.json, --manifest, /run/manifest.json]
+    volumes: ["${SEERE_RUN_DIR:?Set fresh run directory}/scope/code:/scope:ro", "${SEERE_RUN_DIR}/reports/code:/reports", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  local:
+    <<: *worker
+    command: [local, --input, /scope, --output, /reports/report.json, --manifest, /run/manifest.json]
+    volumes: ["${SEERE_RUN_DIR}/scope/local:/scope:ro", "${SEERE_RUN_DIR}/reports/local:/reports", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  rag:
+    <<: *worker
+    command: [rag, --input, /scope/chunks.db, --output, /reports/report.json, --manifest, /run/manifest.json]
+    volumes: ["${SEERE_RUN_DIR}/scope/rag:/scope:ro", "${SEERE_RUN_DIR}/reports/rag:/reports", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  runtime:
+    <<: *worker
+    command: [runtime, --input, /scope/content.txt, --output, /reports/report.json, --manifest, /run/manifest.json]
+    volumes: ["${SEERE_RUN_DIR}/scope/runtime:/scope:ro", "${SEERE_RUN_DIR}/reports/runtime:/reports", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+  coordinator:
+    <<: *worker
+    profiles: [coordinate]
+    secrets: []
+    environment: {}
+    command: [coordinator, --input, /reports, --output, /plan/plan.json, --manifest, /run/manifest.json]
+    volumes: ["${SEERE_RUN_DIR}/reports:/reports:ro", "${SEERE_RUN_DIR}/plan:/plan", "${SEERE_RUN_DIR}/manifest.json:/run/manifest.json:ro"]
+secrets:
+  fingerprint_key:
+    file: ${SEERE_RUN_DIR}/.seere/fingerprint.key

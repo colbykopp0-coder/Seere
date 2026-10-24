@@ -9,3 +9,8 @@ build/
 .env.*
 !.env.example
 .DS_Store
+
+work/
+.seere/
+reports/
+plan/
