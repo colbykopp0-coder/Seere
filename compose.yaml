@@ -11,7 +11,7 @@ x-worker: &worker
   environment:
     SEERE_FINGERPRINT_KEY_FILE: /run/secrets/fingerprint_key
   secrets: [fingerprint_key]
-  tmpfs: [/tmp:size=16m,mode=1777]
+  tmpfs: ["/tmp:size=16m,mode=1777"]
 services:
   code:
     <<: *worker
